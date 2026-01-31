@@ -7,6 +7,21 @@ export default function Matches() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const sleepLabels = {
+  0: "Early sleeper (9–10 PM)",
+  1: "Normal sleeper (11–12)",
+  2: "Late sleeper (12–1 AM)",
+  3: "Very late sleeper"
+};
+
+const studyLabels = {
+  0: "Morning",
+  1: "Afternoon",
+  2: "Evening",
+  3: "Night"
+};
+
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -83,9 +98,17 @@ export default function Matches() {
               <h3 className="font-semibold mb-2">Preferences:</h3>
               <ul className="list-disc ml-5 text-sm text-gray-700">
                 <li>Food: {m.user.preferences.food}</li>
-                <li>Sleep: {m.user.preferences.sleepTime}</li>
-                <li>Noise: {m.user.preferences.noise}</li>
-                <li>Cleanliness: {m.user.preferences.cleanliness}</li>
+                <li>
+  Sleep: {sleepLabels[m.user.preferences.sleepTime]}
+</li>
+
+<li>
+  Noise tolerance: {m.user.preferences.noise}/10
+</li>
+
+<li>
+  Cleanliness level: {m.user.preferences.cleanliness}/10
+</li>
               </ul>
             </div>
 
