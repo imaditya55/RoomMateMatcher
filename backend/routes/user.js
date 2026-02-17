@@ -1,6 +1,7 @@
 import express from "express";
 import User from "../models/User.js";
 import { auth } from "../middleware/auth.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ const router = express.Router();
 router.put("/preferences", auth, async (req, res) => {
   try {
     const {
+      gender,
       sleepTime,
       studyTime,
       cleanliness,
@@ -33,6 +35,7 @@ router.put("/preferences", auth, async (req, res) => {
       req.userId,
       {
         preferences: {
+          gender,
           sleepTime,
           studyTime,
           cleanliness,
@@ -56,6 +59,73 @@ router.put("/preferences", auth, async (req, res) => {
     );
 
     res.json({ message: "Preferences updated", user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// SAVED ROOMMATES -------------------------------------
+router.get("/saved", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId)
+      .populate({
+        path: "savedRoommates",
+        select: "name email preferences"
+      })
+      .select("savedRoommates");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ saved: user.savedRoommates || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/saved/:roommateId", auth, async (req, res) => {
+  try {
+    const { roommateId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(roommateId)) {
+      return res.status(400).json({ message: "Invalid roommate id" });
+    }
+
+    if (String(roommateId) === String(req.userId)) {
+      return res.status(400).json({ message: "You can't save yourself" });
+    }
+
+    const exists = await User.exists({ _id: roommateId });
+    if (!exists) {
+      return res.status(404).json({ message: "Roommate not found" });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.userId,
+      { $addToSet: { savedRoommates: roommateId } },
+      { new: true }
+    ).select("savedRoommates");
+
+    res.json({ message: "Saved", savedRoommates: updated?.savedRoommates || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/saved/:roommateId", auth, async (req, res) => {
+  try {
+    const { roommateId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(roommateId)) {
+      return res.status(400).json({ message: "Invalid roommate id" });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.userId,
+      { $pull: { savedRoommates: roommateId } },
+      { new: true }
+    ).select("savedRoommates");
+
+    res.json({ message: "Unsaved", savedRoommates: updated?.savedRoommates || [] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -126,24 +196,30 @@ function matchScore(a = {}, b = {}) {
 // GET MATCHES ----------------------------------------
 router.get("/matches", auth, async (req, res) => {
   try {
-    const currentUser = await User.findById(req.userId);
+    const currentUser = await User.findById(req.userId).select(
+      "preferences savedRoommates"
+    );
     if (!currentUser) return res.status(404).json({ message: "User not found" });
 
     const myPrefs = currentUser.preferences || {};
+    const savedSet = new Set(
+      (currentUser.savedRoommates || []).map((id) => String(id))
+    );
 
     const users = await User.find({ _id: { $ne: req.userId } }).select("-password");
 
-   const matches = users
-  .map(u => {
-    const result = matchScore(myPrefs, u.preferences || {});
-    return {
-      user: u,
-      score: result.score,
-      reasons: result.reasons
-    };
-  })
-  .filter(m => m.score >= 15)
-  .sort((a, b) => b.score - a.score);
+    const matches = users
+      .map((u) => {
+        const result = matchScore(myPrefs, u.preferences || {});
+        return {
+          user: u,
+          score: result.score,
+          reasons: result.reasons,
+          isSaved: savedSet.has(String(u._id))
+        };
+      })
+      .filter((m) => m.score >= 15)
+      .sort((a, b) => b.score - a.score);
 
   
 

@@ -13,4 +13,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Auto logout on auth errors (expired/invalid token)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      localStorage.removeItem("token");
+      // Force a clean reset so protected routes immediately lock
+      if (window.location.pathname !== "/") {
+        window.location.replace("/");
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;

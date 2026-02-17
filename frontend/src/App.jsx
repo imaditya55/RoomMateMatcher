@@ -6,7 +6,9 @@ import Register from "./pages/Register";
 import Preferences from "./pages/Preferences";
 import Matches from "./pages/Matches";
 import Profile from "./pages/Profile";
+import Saved from "./pages/Saved";
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -30,9 +32,38 @@ function App() {
       <Routes>
         <Route path="/" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/preferences" element={<Preferences />} />
-        <Route path="/matches" element={<Matches />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/preferences"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <Preferences />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/matches"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <Matches />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <Saved />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );
