@@ -32,30 +32,30 @@ export default function Login({ setIsLoggedIn }) {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded-xl shadow-md w-96"
+        className="bg-white p-8 rounded-2xl shadow border w-full max-w-md"
       >
         <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <label className="block">
-          <span>Email</span>
+          <span className="block text-sm font-medium text-gray-700">Email</span>
           <input
             type="email"
-            className="w-full px-3 py-2 border rounded-lg mt-1"
+            className="w-full px-3 py-2 border rounded-lg mt-1 outline-none focus:ring focus:ring-blue-300"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
 
         <label className="block mt-4">
-          <span>Password</span>
+          <span className="block text-sm font-medium text-gray-700">Password</span>
           <input
             type="password"
-            className="w-full px-3 py-2 border rounded-lg mt-1"
+            className="w-full px-3 py-2 border rounded-lg mt-1 outline-none focus:ring focus:ring-blue-300"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -69,7 +69,7 @@ export default function Login({ setIsLoggedIn }) {
         </button>
 
         <p
-          className="text-center mt-4 text-blue-600 cursor-pointer"
+          className="text-center mt-4 text-sm text-blue-600 cursor-pointer"
           onClick={() => navigate("/register")}
         >
           Don't have an account? Register

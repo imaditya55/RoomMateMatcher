@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const preferenceSchema = new mongoose.Schema({
+  gender: String,
   sleepTime: Number,
   studyTime: Number,
 
@@ -30,7 +31,15 @@ const userSchema = new mongoose.Schema({
   preferences: {
     type: preferenceSchema,
     default: {}   // empty until user fills form
-  }
+  },
+
+  savedRoommates: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: []
+    }
+  ]
 });
 
 export default mongoose.model("User", userSchema);

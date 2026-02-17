@@ -43,6 +43,7 @@ useEffect(() => {
 
 
 const [form, setForm] = useState({
+  gender: "",
   budgetMin: "",
   budgetMax: "",
   sleepTime: "",
@@ -93,8 +94,8 @@ const [form, setForm] = useState({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow w-full max-w-2xl">
+    <div className="min-h-screen bg-gray-100 px-4 py-8">
+      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow border">
 
         <h1 className="text-2xl font-bold mb-6 text-center">Roommate Preferences</h1>
 
@@ -103,13 +104,33 @@ const [form, setForm] = useState({
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Your gender</label>
+            <select
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+              className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"
+            >
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
           {/* Sleep */}
           <div>
   <label className="block text-sm font-medium mb-1">
     When do you usually sleep?
   </label>
-  <select name="sleepTime" value={form.sleepTime} onChange={handleChange}
-    className="border p-2 rounded w-full">
+  <select
+    name="sleepTime"
+    value={form.sleepTime}
+    onChange={handleChange}
+    className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"
+  >
     <option value={0}>Early (9–10 PM)</option>
     <option value={1}>Normal (11–12)</option>
     <option value={2}>Late (12–1)</option>
@@ -123,8 +144,12 @@ const [form, setForm] = useState({
   <label className="block text-sm font-medium mb-1">
     Preferred study time
   </label>
-  <select name="studyTime" value={form.studyTime} onChange={handleChange}
-    className="border p-2 rounded w-full">
+  <select
+    name="studyTime"
+    value={form.studyTime}
+    onChange={handleChange}
+    className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"
+  >
     <option value={0}>Morning</option>
     <option value={1}>Afternoon</option>
     <option value={2}>Evening</option>
@@ -140,7 +165,7 @@ const [form, setForm] = useState({
   </label>
   <input type="number" name="cleanliness" min="1" max="10"
     value={form.cleanliness} onChange={handleChange}
-    className="border p-2 rounded w-full"/>
+    className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"/>
 </div>
 
           {/* Noise */}
@@ -150,7 +175,7 @@ const [form, setForm] = useState({
   </label>
   <input type="number" name="noise" min="1" max="10"
     value={form.noise} onChange={handleChange}
-    className="border p-2 rounded w-full"/>
+    className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"/>
 </div>
 
           {/* Budget */}
@@ -159,10 +184,10 @@ const [form, setForm] = useState({
   <div className="flex gap-2">
     <input type="number" name="budgetMin" placeholder="Min"
       value={form.budgetMin} onChange={handleChange}
-      className="border p-2 rounded w-full"/>
+      className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"/>
     <input type="number" name="budgetMax" placeholder="Max"
       value={form.budgetMax} onChange={handleChange}
-      className="border p-2 rounded w-full"/>
+      className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"/>
   </div>
 </div>
 
@@ -176,7 +201,7 @@ const [form, setForm] = useState({
     name="food"
     value={form.food}
     onChange={handleChange}
-    className="border p-2 rounded w-full"
+    className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"
   >
     <option value="veg">Veg</option>
     <option value="non-veg">Non-veg</option>
@@ -193,7 +218,7 @@ const [form, setForm] = useState({
   name="location"
   value={form.location}
   onChange={handleChange}
-  className="border p-2 rounded w-full"
+    className="border p-2 rounded-lg w-full outline-none focus:ring focus:ring-blue-300"
 >
   <option value="">Select block</option>
   <option value="Block A">Block A</option>
@@ -205,32 +230,32 @@ const [form, setForm] = useState({
 
 
           {/* Habits */}
-        <div className="md:col-span-2">
+          <div className="md:col-span-2 bg-gray-50 border rounded-xl p-4">
   <label className="block text-sm font-medium mb-1">Lifestyle habits</label>
 
-  <label className="block">
+  <label className="flex items-center gap-2 text-sm text-gray-700 mt-2">
     <input type="checkbox" name="smokes" checked={form.smokes} onChange={handleChange}/>
     I smoke
   </label>
 
-  <label className="block">
+  <label className="flex items-center gap-2 text-sm text-gray-700 mt-2">
     <input type="checkbox" name="drinks" checked={form.drinks} onChange={handleChange}/>
     I drink
   </label>
 
-  <label className="block">
+  <label className="flex items-center gap-2 text-sm text-gray-700 mt-2">
     <input type="checkbox" name="okayWithSmoking" checked={form.okayWithSmoking} onChange={handleChange}/>
     Okay if roommate smokes
   </label>
 
-  <label className="block">
+  <label className="flex items-center gap-2 text-sm text-gray-700 mt-2">
     <input type="checkbox" name="okayWithDrinking" checked={form.okayWithDrinking} onChange={handleChange}/>
     Okay if roommate drinks
   </label>
 </div>
 
 
-          <button className="bg-blue-600 text-white p-2 rounded md:col-span-2">Save</button>
+          <button className="bg-blue-600 text-white p-2 rounded-lg md:col-span-2 hover:bg-blue-700 transition">Save</button>
         </form>
       </div>
     </div>
