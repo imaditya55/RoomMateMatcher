@@ -1,11 +1,10 @@
 import express from "express";
 import User from "../models/User.js";
+import Request from "../models/Request.js";
 import { auth } from "../middleware/auth.js";
 import mongoose from "mongoose";
 
 const router = express.Router();
-
-// UPDATE USER PREFERENCES ------------------------------
 
 // UPDATE USER PREFERENCES ------------------------------
 router.put("/preferences", auth, async (req, res) => {
@@ -206,6 +205,23 @@ router.get("/matches", auth, async (req, res) => {
       (currentUser.savedRoommates || []).map((id) => String(id))
     );
 
+    // Fetch all requests involving the current user
+    const myRequests = await Request.find({
+      $or: [{ from: req.userId }, { to: req.userId }]
+    }).lean();
+
+    // Build a lookup: otherUserId -> { requestId, status, direction }
+    const requestMap = new Map();
+    for (const r of myRequests) {
+      const isOutgoing = String(r.from) === String(req.userId);
+      const otherId = isOutgoing ? String(r.to) : String(r.from);
+      requestMap.set(otherId, {
+        requestId: String(r._id),
+        status: r.status,
+        direction: isOutgoing ? "outgoing" : "incoming"
+      });
+    }
+
     const users = await User.find({ _id: { $ne: req.userId } }).select("-password");
 
     const matches = users
@@ -215,14 +231,12 @@ router.get("/matches", auth, async (req, res) => {
           user: u,
           score: result.score,
           reasons: result.reasons,
-          isSaved: savedSet.has(String(u._id))
+          isSaved: savedSet.has(String(u._id)),
+          request: requestMap.get(String(u._id)) || null
         };
       })
       .filter((m) => m.score >= 15)
       .sort((a, b) => b.score - a.score);
-
-  
-
 
     res.json({ matches });
   } catch (err) {
@@ -249,5 +263,167 @@ router.get("/profile", auth, async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════════════
+// ROOMMATE REQUESTS
+// ══════════════════════════════════════════════════════
+
+// SEND REQUEST ----------------------------------------
+router.post("/request/:userId", auth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    if (String(userId) === String(req.userId)) {
+      return res.status(400).json({ message: "You can't send a request to yourself" });
+    }
+
+    const targetUser = await User.exists({ _id: userId });
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if a request already exists in either direction
+    const existing = await Request.findOne({
+      $or: [
+        { from: req.userId, to: userId },
+        { from: userId, to: req.userId }
+      ]
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        message: `A request already exists (${existing.status})`,
+        request: existing
+      });
+    }
+
+    const newRequest = await Request.create({
+      from: req.userId,
+      to: userId,
+      status: "pending"
+    });
+
+    res.json({ message: "Request sent", request: newRequest });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET ALL REQUESTS ------------------------------------
+router.get("/requests", auth, async (req, res) => {
+  try {
+    const incoming = await Request.find({ to: req.userId })
+      .populate("from", "name email preferences")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const outgoing = await Request.find({ from: req.userId })
+      .populate("to", "name email preferences")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ incoming, outgoing });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ACCEPT REQUEST --------------------------------------
+router.put("/request/:id/accept", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid request id" });
+    }
+
+    const request = await Request.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Only the recipient can accept
+    if (String(request.to) !== String(req.userId)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: `Request already ${request.status}` });
+    }
+
+    request.status = "accepted";
+    await request.save();
+
+    res.json({ message: "Request accepted", request });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CANCEL / UNDO REQUEST (sender only, while still pending) ------
+router.delete("/request/:id/cancel", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid request id" });
+    }
+
+    const request = await Request.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Only the sender can cancel
+    if (String(request.from) !== String(req.userId)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: `Cannot cancel a request that is already ${request.status}` });
+    }
+
+    await Request.findByIdAndDelete(id);
+
+    res.json({ message: "Request cancelled" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// REJECT REQUEST --------------------------------------
+router.put("/request/:id/reject", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid request id" });
+    }
+
+    const request = await Request.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Only the recipient can reject
+    if (String(request.to) !== String(req.userId)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({ message: `Request already ${request.status}` });
+    }
+
+    request.status = "rejected";
+    await request.save();
+
+    res.json({ message: "Request rejected", request });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;
