@@ -15,6 +15,7 @@ const preferenceSchema = new mongoose.Schema({
   okayWithDrinking: Boolean,
 
   food: String,
+  personality: String,
 
   budgetMin: Number,
   budgetMax: Number,

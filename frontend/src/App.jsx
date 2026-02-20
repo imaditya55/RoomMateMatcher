@@ -6,7 +6,9 @@ import Register from "./pages/Register";
 import Preferences from "./pages/Preferences";
 import Matches from "./pages/Matches";
 import Profile from "./pages/Profile";
+import Requests from "./pages/Requests";
 import Saved from "./pages/Saved";
+import Chat from "./pages/Chat";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -61,6 +63,22 @@ function App() {
           element={
             <ProtectedRoute isLoggedIn={isLoggedIn}>
               <Saved />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requests"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <Requests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <Chat />
             </ProtectedRoute>
           }
         />

@@ -18,7 +18,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
-    if (status === 401 || status === 403) {
+    // Only auto-logout on 401 (unauthorized). 403 can be a valid
+    // business-logic response (e.g. "not connected", "not authorized").
+    if (status === 401) {
       localStorage.removeItem("token");
       // Force a clean reset so protected routes immediately lock
       if (window.location.pathname !== "/") {

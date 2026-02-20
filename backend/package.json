@@ -1,14 +1,14 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "type":"module",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-  "start": "node index.js",
-  "dev": "nodemon index.js",
-  "seed": "node scripts/seed-users.js",
-  "seed:reset": "node scripts/seed-users.js --reset"
-},
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed": "node scripts/seed-users.js",
+    "seed:reset": "node scripts/seed-users.js --reset"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -19,7 +19,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.0.1"
+    "mongoose": "^9.0.1",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
